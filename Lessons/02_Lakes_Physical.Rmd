@@ -116,6 +116,10 @@ ggplot(Pauldata, aes(x = temperature_C, y = depth, color = daynum)) +
 
 How do temperatures at the surface compare to temperatures at the mid-depths and at the bottom?
 <add notes here>
+epilimnion - top of lake
+hypolimnion - bottom of lake
+
+Dimictic lake - mixes twice during the year during spring and fall, due to freezing. wind causes mixing due to waves
 
 
 ### Graphing seasonal water profiles
