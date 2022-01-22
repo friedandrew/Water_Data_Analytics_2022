@@ -24,15 +24,25 @@ Target due date: 2022-01-25
 
 ## Setup
 
-1. Verify your working directory is set to the R project file, 
-2. Load the tidyverse, lubridate, and rLakeAnalyzer packages
-3. Import the NTL-LTER physical lake dataset and set the date column to the date format. 
+-1. Verify your working directory is set to the R project file, 
+-2. Load the tidyverse, lubridate, and rLakeAnalyzer packages   
+-3. Import the NTL-LTER physical lake dataset and set the date column to the date format.
 4. Using the `mutate` function, add a column called Month. Remove temperature NAs.
-5. Set your ggplot theme (can be theme_classic or something else)
+-5. Set your ggplot theme (can be theme_classic or something else)
 
 ```{r}
+getwd()
+library(tidyverse)
+library(lubridate)
+library(rLakeAnalyzer)
+NTLdata <- read.csv("./Data/Raw/NTL-LTER_Lake_ChemistryPhysics_Raw.csv")
+theme_set(theme_classic())
+NTLdata$sampledate <- as.Date(NTLdata$sampledate, format = "%m/%d/%y") #sets date to Y-M-D
 
-
+dim(NTLdata) #removing NAs
+NTLdata<- NTLdata%>%
+  drop_na(temperature_C)
+dim(NTLdata)
 ```
 
 ## Creating and analyzing lake temperature profiles
