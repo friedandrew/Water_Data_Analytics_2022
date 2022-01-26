@@ -188,7 +188,7 @@ NehalemPlot
 
 CombinedPlot <- 
   plot_grid(EnoPlot, VerdePlot, BitterrootPlot, SaukPlot, NehalemPlot, 
-            ncol = 1)
+            ncol = 1, rel_heights = c(1,1,1,1,1.1), align = "hv")
 CombinedPlot
 
 # add relative heights and align axes
