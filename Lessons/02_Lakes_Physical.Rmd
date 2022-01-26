@@ -141,13 +141,23 @@ ggplot(subset(Pauldata, year4 == 1993),
 
 # Now, make a plot as above but with dissolved oxygen saturation instead of temperature.
 
+ggplot(subset(Pauldata, year4 == 1993), 
+       aes(x = dissolvedOxygen, y = depth, color = daynum)) +
+  geom_point(alpha = 0.5) +
+  scale_y_reverse() +
+  scale_color_viridis_c() +
+  labs(x = "DO (mg/l)", y = "Depth (m)", color = "DOY") 
 
 ```
 
 Why does mixing occur in the spring and fall? What are the mechanisms that make this possible?
 <add notes here>
+Dimictic lake - mmixes twice during the year due to ice forming and thawing, with warmer summers
+Monomictic - stronger summer stratification, mixes just in winter. more common in warmer lattitudes
+Polymictic - mixes several times per year, during weather patterns. Also shallower lakes
+Amictic lake - in sheltered location, 
 
-
+Photosynthesis increases DO in epilimnion. Phytoplankton need nutrients, upwelling from hypolimnion. Bulge at ~2.5-5m is deep chlorophyll maxium, balance of sunlight and nutrients.
 
 ### Calculating thermoclines
 
@@ -170,7 +180,7 @@ ggplot(Pauldata_thermo, aes(x = daynum, y = thermocline)) +
 
 How does thermocline depth change over the course of the year? When do we observe the most variability in thermocline depth?
 <add notes here>
-
+The thermocline gets deeper as the year goes on, and narrows as the year goes on. 
 
 ### Climate change
 
