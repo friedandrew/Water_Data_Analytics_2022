@@ -1,6 +1,6 @@
 ---
 title: "Assignment 2: Physical Properties of Lakes"
-author: "Student Name"
+author: "Andrew Friedman-Herring"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
@@ -35,14 +35,16 @@ getwd()
 library(tidyverse)
 library(lubridate)
 library(rLakeAnalyzer)
-NTLdata <- read.csv("./Data/Raw/NTL-LTER_Lake_ChemistryPhysics_Raw.csv")
 theme_set(theme_classic())
-NTLdata$sampledate <- as.Date(NTLdata$sampledate, format = "%m/%d/%y") #sets date to Y-M-D
+NTL.data <- read.csv("../Data/Raw/NTL-LTER_Lake_ChemistryPhysics_Raw.csv")
+NTL.data$sampledate<- as.Date(NTL.data$sampledate, format = "%m/%d/%y") #changes to date object
 
-dim(NTLdata) #removing NAs
-NTLdata<- NTLdata%>%
-  drop_na(temperature_C)
-dim(NTLdata)
+#this chunk drops the NAs and adds a month column
+NTL.data.clean <- 
+  NTL.data %>%
+  drop_na(temperature_C)%>%
+  mutate(month = month(sampledate))
+
 ```
 
 ## Creating and analyzing lake temperature profiles
@@ -51,18 +53,76 @@ dim(NTLdata)
 
 What seasonal trends do you observe, and do these manifest differently in each lake?
 
+> Answer: As the day number increases, the temperature of the lake increases, with the top of the lake heating
+faster, and the bottom of the lakes increasing slower. Paul lake has a higher temperature in deeper sections of the lake compared to East Long Lake or Tuesday Lake. 
+In terms of Dissolved oxygen, it seems that the concentration decreases throughout the summer, and is at the
+highest concentration early in the spring. Some lakes, like Paul, Peter, and West Long Lake show large bumps in dissolved oxygen at around 4 meters, whereas Tuesday Lake and East Long Lake do not show the same bump. This is likely due to differences in primary productivity and light penetration differences. 
+
 ```{r}
+NTL.data.clean.1993 <- NTL.data.clean%>%
+  filter(year4 == 1993)
 
+ggplot(NTL.data.clean.1993, aes(x = temperature_C, y = depth, color = daynum))+
+  scale_y_reverse()+
+  geom_point(alpha = 0.5)+
+  scale_color_viridis_c()+
+  facet_wrap(~lakename)+
+  labs(x = "Temperature *C", y = "Depth", color = "DOY")
+  
+  
 
+ggplot(NTL.data.clean.1993, aes(x = dissolvedOxygen, y = depth, color = daynum))+
+  scale_y_reverse()+
+  geom_point(alpha = 0.5)+
+  scale_color_viridis_c()+
+  facet_wrap(~lakename)+
+  labs(x = "Dissolved Oxygen", y = "Depth", color = "DOY" )
+  
+  
 ```
 
 6. Create a new dataset that calculates thermocline depths for all lakes on all dates (hint: you will need group by lake, year, month, DOY, and sample date).
+
+```{r}
+NTL.data.clean.thermocline <- NTL.data.clean%>%
+  group_by(lakename, year4, month, daynum, sampledate)%>%
+  summarise(thermocline = thermo.depth(wtr = temperature_C, depths = depth, seasonal = FALSE))%>%
+  filter(thermocline>1)
+```
+
+
 7. Plot thermocline depth by day of year for your newly made dataset. Color each point by lake name, make the points 50% transparent, and choose a color palette other than the ggplot default. 
+
+```{r}
+ggplot(NTL.data.clean.thermocline, aes(x = daynum, y = thermocline, color = lakename))+
+  geom_point(alpha = 0.5)+
+  scale_color_viridis_d()+
+  labs(x = "DOY", y = "Thermocline Depth", color = "Lake Name")
+
+```
+
 8. Create a boxplot of thermocline depth distributions split up by lake name on the x axis and by month as the fill color (hint: you will need to set Month as a factor). Choose a color palette other than the ggplot default, relabel axes and legend, and place the legend on the top of the graph.
+
+```{r}
+NTL.data.clean.thermocline$month<- as.factor(NTL.data.clean.thermocline$month)
+
+ggplot(NTL.data.clean.thermocline, aes(lakename, thermocline, fill = month))+
+  geom_boxplot()+
+  scale_y_reverse()+
+  scale_fill_viridis_d()+
+  theme(legend.position = "top")+
+  labs(x = "Lake", y = "Thermocline Depth", color = "Month")
+
+
+```
 
 Do all the lakes have a similar seasonal progression of thermocline deepening? Which lakes have the deepest thermoclines, and how does this relate to their maximum depth? 
 
-```{r}
+> Answer: Yes, all lakes show at least some level of thermocline deepening throughout the year. 
+The magnitude of the depening is highly variable, with Hummingbird Lake having a very 
+shallow thermoclline with not much variation, whereas Crampton, Peter and Paul Lakes 
+all have very deep thermoclines, with a dramatic progression through the seasons. 
+In general, the lakes that were the deepest showed a larger change in thermocline depth, in 
+addition to deeper thermocline values in general.
 
-```
 
