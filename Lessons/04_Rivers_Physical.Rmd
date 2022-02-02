@@ -16,6 +16,8 @@ editor_options:
 ## Opening Discussion
 How is climate change impacting discharge in streams and rivers? What are the new and ongoing challenges faced by these impacts in watersheds?
 
+
+
 ## Session Set Up
 
 ```{r, message = FALSE}
@@ -36,7 +38,7 @@ theme_set(theme_classic())
 
 A **recurrence interval** is the past recurrence of an event, in this case a peak annual discharge measurement of a given magnitude. The value of a recurrence interval corresponds to the average number of years between discharge of a given magnitude. Typically the minimum amount of years required to construct a recurrence interval is 10, but 30 is more robust. A recurrence interval, T, is calculated as: 
 
-$T = (n+1)/m$
+$T = (n+1)/m$ #makes it an equation
 
 where n is the number of years and m is the ranking of an event within the observed period. We add one to n because we are computing the recurrence interval for a discharge event of a given magnitude *or greater*. 
 
@@ -98,7 +100,7 @@ Let's display and model the relationship between peak annual disharge and recurr
 ggplot(EnoRecurrence, aes(x = RecurrenceInterval, y = PeakDischarge)) +
   geom_point() +
   scale_x_log10() +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm", color = "black", se = FALSE)
 
 Eno.RImodel <- lm(data = EnoRecurrence, PeakDischarge ~ log10(RecurrenceInterval))
 summary(Eno.RImodel)
