@@ -1,6 +1,6 @@
 ---
 title: "Assignment 4: Physical Properties of Rivers"
-author: "Student Name"
+author: "Andrew Friedman-Herring"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
@@ -25,25 +25,137 @@ Target due date: 2022-02-15
 ## Setup and Data Processing
 
 1. Verify your working directory is set to the R project file. Load the tidyverse, cowplot, dataRetrieval, lubridate, lfstat, and EcoHydRology packages. Set your ggplot theme (can be theme_classic or something else).
-2. Acquire daily mean discharge data for the Bitterroot River in Montana (USGS gage 12344000) and the Nehalem River in Oregon (USGS gage 14299800). Collect the 10 most recent complete water years.
-3. Add columns in the dataset for water year, baseflow, and stormflow. Feel free to use either baseflow separation function we used in class. 
-4. Calculate annual total discharge, annual baseflow, and annual proportion baseflow for the two sites.
+
 
 ```{r}
-
+#1
+getwd()
+library(lfstat)
+library(EcoHydRology)
+library(lubridate)
+library(dataRetrieval)
+library(cowplot)
+library(tidyverse)
+theme_set(theme_classic())
 
 ```
 
+2. Acquire daily mean discharge data for the Bitterroot River in Montana (USGS gage 12344000) and the Nehalem River in Oregon (USGS gage 14299800). Collect the 10 most recent complete water years.
+```{r}
+#2
+Bitterroot<- readNWISdata(siteNumbers = "12344000",
+                          parameterCd = "00060",
+                          startDate = "2011-10-01",
+                          endDate = "2021-09-30"
+                          )
+Nehalem<- readNWISdata(siteNumbers = "14299800",
+                          parameterCd = "00060",
+                          startDate = "2011-10-01",
+                          endDate = "2021-09-30"
+                          )
+```
+3. Add columns in the dataset for water year, baseflow, and stormflow. Feel free to use either baseflow separation function we used in class. 
+```{r}
+Bitterroot$dateTime<- as.Date(Bitterroot$dateTime, format = "%y-%m-%d")
+Nehalem$dateTime<- as.Date(Nehalem$dateTime, format = "%y-%m-%d")
+names(Bitterroot)[4:5]<- c("Discharge", "Approval.Code")
+names(Nehalem)[4:5]<- c("Discharge", "Approval.Code")
+
+Bitterroot.Flow<- Bitterroot%>%
+  mutate(WaterYear = water_year(dateTime, origin = "usgs"),
+         Baseflow = baseflow(Discharge),
+         Stormflow = Discharge - Baseflow)
+
+Nehalem.Flow<- Nehalem%>%
+  mutate(WaterYear = water_year(dateTime, origin = "usgs"),
+         Baseflow = baseflow(Discharge),
+         Stormflow = Discharge - Baseflow)
+
+```
+4. Calculate annual total discharge, annual baseflow, and annual proportion baseflow for the two sites.
+```{r}
+#4
+Bitterroot.Flow.Summary<- Bitterroot.Flow%>%
+  drop_na(Discharge)%>%
+  drop_na(Baseflow)%>%
+  group_by(WaterYear)%>%
+  summarize(TotalDischarge = sum(Discharge),
+          AnnualBaseflow = sum(Baseflow),
+          BaseflowProportion = AnnualBaseflow/TotalDischarge)
+
+Nehalem.Flow.Summary<- Nehalem.Flow%>%
+  drop_na(Discharge)%>%
+  drop_na(Baseflow)%>%
+  group_by(WaterYear)%>%
+  summarize(TotalDischarge = sum(Discharge),
+          AnnualBaseflow = sum(Baseflow),
+          BaseflowProportion = AnnualBaseflow/TotalDischarge)
+Bitterroot.Flow.Summary$WaterYear<- as.numeric(as.character(Bitterroot.Flow.Summary$WaterYear))
+Nehalem.Flow.Summary$WaterYear<- as.numeric(as.character(Nehalem.Flow.Summary$WaterYear))
+```
 ## Analyze seasonal patterns in discharge
 
 5. For both sites, create a graph displaying discharge and baseflow by date. Adjust axis labels accordingly.
+
+
+```{r}
+#5
+Nehalem.Plot.1<- ggplot(Nehalem.Flow, 
+                        aes(x = dateTime))+
+  geom_line(aes(y = Discharge), color = "grey")+
+  geom_line(aes( y = Baseflow))+
+  labs(x = "Date", y = "Discharge (cfs)")
+Nehalem.Plot.1
+
+Bitterroot.Plot.1<- ggplot(Bitterroot.Flow, 
+                        aes(x = dateTime))+
+  geom_line(aes(y = Discharge), color = "grey")+
+  geom_line(aes( y = Baseflow))+
+  labs(x = "Date", y = "Discharge (cfs)")
+Bitterroot.Plot.1
+```
+
 6. For both sites, create a graph displaying annual total discharge and annual baseflow across years, and a second graph displaying the proportion baseflow across years (adjust axis labels accordingly). Plot these graphs on top of one another using `plot_grid`. Remember to align the axes!
 
 ```{r}
+#6
 
+Nehalem.Plot.Summary <- ggplot(Nehalem.Flow.Summary, aes(x = WaterYear))+
+  geom_line(aes(y = TotalDischarge), color = "grey")+
+  geom_line(aes(y = AnnualBaseflow))+
+  geom_point(aes(y = TotalDischarge), color = "grey")+
+  geom_point(aes(y = AnnualBaseflow))+
+  labs(x = "Year", y = "Total Discharge (cfs)")+
+  scale_y_continuous(limits = c(0,130000))
+Nehalem.Plot.Summary
 
+Bitterroot.Plot.Summary <- ggplot(Bitterroot.Flow.Summary, aes(x = WaterYear))+
+  geom_line(aes(y = TotalDischarge), color = "grey")+
+  geom_line(aes(y = AnnualBaseflow))+
+  geom_point(aes(y = TotalDischarge), color = "grey")+
+  geom_point(aes(y = AnnualBaseflow))+
+  labs(x = "Year", y = "Total Discharge (cfs)")+
+  scale_y_continuous(limits = c(0,500000))
+Bitterroot.Plot.Summary
+
+Bitterroot.Plot.Proportion<- ggplot(Bitterroot.Flow.Summary, aes( x = WaterYear, y = BaseflowProportion))+
+  geom_col(fill = "black")+
+  labs(x = "Water Year", y = "Proportion of Discharge as Baseflow")+
+  scale_y_continuous(limits = c(0,1))
+Bitterroot.Plot.Proportion
+
+Nehalem.Plot.Proportion<- ggplot(Nehalem.Flow.Summary, aes(x = WaterYear, y = BaseflowProportion))+
+  geom_col(fill = "black")+
+  labs(x = "Water Year", y = "Proportion of Discharge as Baseflow")+
+  scale_y_continuous(limits = c(0,1))
+Nehalem.Plot.Proportion
+
+plot_grid(Bitterroot.Plot.Summary, Bitterroot.Plot.Proportion, align = "hv", ncol = 1)
+plot_grid(Nehalem.Plot.Summary,Nehalem.Plot.Proportion, align = "hv", ncol = 1)
+```
 ```
 
 7. How do these rivers differ in their discharge and baseflow, both within and across years? How would you attribute these patterns to the climatic conditions in these locations?
 
-> 
+> The Nehalem River seems more event based, and had a lower proportion of baseflow, whereas the 
+Bitterroot river was much more influenced by baseflow and had a smaller impact from events.
