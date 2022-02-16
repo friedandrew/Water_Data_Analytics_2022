@@ -130,10 +130,11 @@ Nehalem.Plot.Summary <- ggplot(Nehalem.Flow.Summary, aes(x = WaterYear))+
 Nehalem.Plot.Summary
 
 Bitterroot.Plot.Summary <- ggplot(Bitterroot.Flow.Summary, aes(x = WaterYear))+
-  geom_line(aes(y = TotalDischarge), color = "grey")+
-  geom_line(aes(y = AnnualBaseflow))+
+  geom_line(aes(y = TotalDischarge, color = "Total Discharge"))+
+  geom_line(aes(y = AnnualBaseflow, color = "Baseflow Discharge"))+
   geom_point(aes(y = TotalDischarge), color = "grey")+
   geom_point(aes(y = AnnualBaseflow))+
+  scale_color_manual(values = c("Total Discharge" = "grey", "Baseflow Discharge" = "black"))+
   labs(x = "Year", y = "Total Discharge (cfs)")+
   scale_y_continuous(limits = c(0,500000))
 Bitterroot.Plot.Summary
