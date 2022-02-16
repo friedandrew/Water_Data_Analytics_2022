@@ -16,6 +16,7 @@ editor_options:
 ## Opening Discussion
 What are the major water quality impairments experienced in lakes?  
 
+
 ## Session Set Up
 
 ```{r}
