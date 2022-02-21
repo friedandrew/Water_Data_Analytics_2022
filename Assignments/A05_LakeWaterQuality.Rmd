@@ -1,6 +1,6 @@
 ---
 title: "Assignment 5: Water Quality in Lakes"
-author: "Student Name"
+author: "Andrew Friedman-Herring"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
@@ -28,7 +28,16 @@ Target due date: 2022-02-22
 2. Load the LAGOSdata database and the trophic state index csv file we created in class.
 
 ```{r setup}
+#1 
+getwd()
+library(tidyverse)
+library(lubridate)
+library(LAGOSNE)
+theme_set(theme_classic())
 
+#2
+LAGOS_data<- lagosne_load()
+LAGOStrophic<- read.csv("./Data/Processed/LAGOStrophic.csv")
 ```
 
 ## Trophic State Index
@@ -36,6 +45,15 @@ Target due date: 2022-02-22
 3. Similar to the trophic.class column we created in class (determined from TSI.chl values), create two additional columns in the data frame that determine trophic class from TSI.secchi and TSI.tp (call these trophic.class.secchi and trophic.class.tp). 
 
 ```{r}
+LAGOStrophic<- LAGOStrophic%>%
+  mutate(trophic.class.secchi = case_when(TSI.secchi < 40 ~ "Ogliotrophic",
+                                          TSI.secchi >= 40 & TSI.secchi< 50 ~ "Mesotrophic",
+                                          TSI.secchi >= 50 & TSI.secchi <70 ~ "Eutrophic",
+                                          TSI.secchi > 70 ~"Hypereutrophic"),
+         trophic.class.tp = case_when(TSI.tp < 40 ~ "Ogliotrophic",
+                                      TSI.tp >= 40 & TSI.tp< 50 ~ "Mesotrophic",
+                                      TSI.tp >= 50 & TSI.tp <70 ~ "Eutrophic",
+                                      TSI.tp > 70 ~"Hypereutrophic"))
 
 ```
 
@@ -43,6 +61,7 @@ Target due date: 2022-02-22
 4. How many observations fall into the four trophic state categories for the three metrics (trophic.class, trophic.class.secchi, trophic.class.tp)? Hint: `n()` function.
 
 ```{r}
+
 
 ```
 
