@@ -30,7 +30,7 @@ library(LAGOSNE)
 theme_set(theme_classic())
 options(scipen = 100)
 
-lagosne_get(dest_folder = LAGOSNE:::lagos_path(), overwrite = TRUE)
+#lagosne_get(dest_folder = LAGOSNE:::lagos_path(), overwrite = TRUE)
 
 ```
 
