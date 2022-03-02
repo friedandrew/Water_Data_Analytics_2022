@@ -103,7 +103,7 @@ NeuseWQFlow_processed <- NeuseWQ_processed %>%
          Month = month(ActivityStartDate), 
          DOY = yday(ActivityStartDate),)
 
-NeuseWQFlow_long <- NeuseWQFlow_processed %>%
+NeuseWQFlow_long <- NeuseWQFlow_processed %>%  #helpful for facetwraping in ggplot
   pivot_longer(cols = c("FecalColiform_cfu.100mL", "FecalStrep_cfu.100mL", "SpC_uS.cm",
                         "Sodium_mg.L", "Magnesium_mg.L", "Calcium_mg.L", "Flow_cfs"),
                names_to = "Variable", values_to = "Value") %>%
@@ -182,7 +182,9 @@ Exercise:
 3. How do fecal coliform and specific conductivity vary as a function of hydrologic condition?
 
 ```{r}
-
+ggplot(NeuseWQFlow_processed, aes(x = HydrologicCondition, y = FecalColiform_cfu.100mL))+
+      geom_boxplot()+
+  lims(y = c(0,1000))
 
 ```
 
