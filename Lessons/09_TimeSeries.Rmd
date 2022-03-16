@@ -67,7 +67,8 @@ names(NeuseFlow)[4:5] <- c("Discharge", "Approval.Code")
 # Plot discharge over time
 ggplot(NeuseFlow, aes(x = Date, y = Discharge)) +
   geom_line() +
-  labs(x = "", y = "Discharge (cfs)")
+  labs(x = "", y = "Discharge (cfs)")+
+  scale_y_log10()
 
 
 ```
@@ -146,7 +147,8 @@ NeuseCond <- readWQPqw(siteNumbers = "USGS-02089500", # Neuse River at Kinston, 
                      endDate = "")
 # Plot conductivity over time
 ggplot(NeuseCond, aes(x = ActivityStartDate, y = ResultMeasureValue)) +
-  geom_point()
+  geom_point()+
+  geom_line()
 ```
 
 It is important to visualize your time series before moving forward with any test. In this case, we notice a few things: 
@@ -193,6 +195,16 @@ NeuseCond_monthly$Conductivity <- linearinterpolation$y
 
 ```{r}
 
+NeuseCond_monthly_ts <- ts(NeuseCond_monthly$Conductivity, frequency = 12)
+NeuseCond_monthly_ts_decomposed <- stl(NeuseCond_monthly_ts, s.window = "periodic")
+plot(NeuseCond_monthly_ts_decomposed)
+
+NeuseCond_monthly_ts_decomposed_df <- as.data.frame(NeuseCond_monthly_ts_decomposed$time.series[,1:3])
+
+
 ```
+
+The seasonality is small
+
 
 
