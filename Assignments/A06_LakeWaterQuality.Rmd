@@ -35,7 +35,8 @@ getwd()
 library(tidyverse)
 library(lubridate)
 library(dataRetrieval)
-set_theme(theme_classic())
+theme_set(theme_classic())
+options(scipen = 4)
 
 NCdata <- readWQPdata(statecode = "North Carolina", 
                       siteType = "Lake, Reservoir, Impoundment", 
@@ -64,19 +65,7 @@ General data processing and quality assurance considerations:
   * Other codes may designate suspect data or other flags which may be described in detail in **ResultLaboratoryCommentText** or another column
 
 
-3. Note the wrangling steps outlined here. Then, set ActivityStartDate as date.
-
-4. Then, add a new pipe that does the following: 
-
-* Select the columns OrganizationIdentifier, OrganizationFormalName, ActivityStartDate, 
-ActivityConductingOrganizationText, MonitoringLocationIdentifier, Depth, ResultMeasureValue, Variable
-* Group by those same variables except ResultMeasureValue, then `summarise` the mean of ResultMeasureValue. This will generate a single row for each location-date-depth sample. 
-* Pivot your dataset into wide format. Hint: `pivot_wider` by Variable and ResultMeasureValue. 
-* Add in month and year as new columns. Filter the dataset for just months May-October.
-* Filter the dataset for just depths 1 m or shallower.
-
-5. Create a graph visualizing the chlorophyll-TP stressor-response relationship. Add a line of best fit for the linear regression, and adjust axis scales and labels as needed. 
-
+Provided Wrangling
   
 ```{r}
 
@@ -115,6 +104,48 @@ NCdata_processed <- NCdata %>%
 
 ```
   
+  
+3. Note the wrangling steps outlined here. Then, set ActivityStartDate as date.
+```{r}
+NCdata_processed$ActivityStartDate <- as.Date(NCdata_processed$ActivityStartDate, format = "%Y-%m-%d")
+class(NCdata_processed$ActivityStartDate)
+```
+
+4. Then, add a new pipe that does the following: 
+
+* Select the columns OrganizationIdentifier, OrganizationFormalName, ActivityStartDate, 
+ActivityConductingOrganizationText, MonitoringLocationIdentifier, Depth, ResultMeasureValue, Variable
+* Group by those same variables except ResultMeasureValue, then `summarise` the mean of ResultMeasureValue. This will generate a single row for each location-date-depth sample. 
+* Pivot your dataset into wide format. Hint: `pivot_wider` by Variable and ResultMeasureValue. 
+* Add in month and year as new columns. Filter the dataset for just months May-October.
+* Filter the dataset for just depths 1 m or shallower.
+```{r}
+NCdata_processed_more <- NCdata_processed %>% 
+  select(OrganizationIdentifier, OrganizationFormalName, 
+         ActivityStartDate, ActivityConductingOrganizationText, 
+         MonitoringLocationIdentifier, Depth_m, ResultMeasureValue, 
+         Variable) %>% 
+  group_by(OrganizationIdentifier, OrganizationFormalName, 
+         ActivityStartDate, ActivityConductingOrganizationText, 
+         MonitoringLocationIdentifier, Depth_m, Variable) %>% 
+  summarise(ResultMeasureValue.mean = mean(ResultMeasureValue)) %>% 
+  pivot_wider(names_from = Variable, values_from = ResultMeasureValue.mean) %>% 
+  mutate(month = month(ActivityStartDate),
+         year = year(ActivityStartDate)) %>% 
+  filter(month %in% c(5:10),
+         Depth_m <= 1)
+```
+
+5. Create a graph visualizing the chlorophyll-TP stressor-response relationship. Add a line of best fit for the linear regression, and adjust axis scales and labels as needed. 
+```{r}
+ggplot(NCdata_processed_more, aes(x = TP_mgL, y = Chla_ugL))+
+  geom_point(alpha = 0.5)+
+  geom_smooth(method = "lm", se = FALSE, color = "black")+
+  scale_x_log10()+
+  scale_y_log10()
+```
+
 6. How might you expect this stressor-response relationship to change (or not) across the Mountains, Piedmont, and Coastal Plain regions of the state? How might you anticipate natural lakes might behave differently than reservoirs?
 
-> 
+> I anticipate that lakes in the piedmont and coastal plain will have higher TP values doe to agricultural runoff
+
