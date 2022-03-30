@@ -1,6 +1,6 @@
 ---
 title: "Assignment 7: Water Quality in Rivers"
-author: "Student Name"
+author: "Andrew Friedman-Herring"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
@@ -28,7 +28,13 @@ Target due date: 2022-03-22
 
 
 ```{r}
-
+getwd()
+library(tidyverse)
+library(lubridate)
+library(cowplot)
+library(dataRetrieval)
+theme_set(theme_classic())
+options(scipen = 4)
 ```
 
 ## Hypoxia
@@ -39,20 +45,29 @@ This assignment will look at another measure of water quality - oxygen concentra
 2. Import the oxygen water quality data from New Hope Creek at Blands (using `readWQPqw()`, site code `USGS-02097314`, parameter code `00300`). Make a data frame called `NewHopeDO` that includes only the Date and dissolved oxygen concentration values. Rename the column names "Date" and "DO_mgL".
 
 ```{r}
-
-
+NewHopeDO_raw <- readWQPqw(siteNumbers = 'USGS-02097314',
+                       parameterCd = '00300')
+NewHopeDO <- NewHopeDO_raw %>% 
+  mutate(Date = as.Date(ActivityStartDate, format = "%Y-%m-%d"),
+         DO_mgL = as.numeric(ResultMeasureValue)) %>% 
+  select(Date, DO_mgL) 
+class(NewHopeDO$Date)
+class(NewHopeDO$DO_mgL)
 ```
 
 3. Create a ggplot of oxygen concentrations over time. Include a horizonal line at 2 mg/l to show the hypoxia cutoff. 
 
 ```{r}
-
+DO_plot <- ggplot(NewHopeDO, aes(x = Date, y = DO_mgL))+
+  geom_point()+
+  geom_hline(yintercept = 2)+
+  scale_y_log10()
 
 ```
 
 4. What do you notice about the frequency of hypoxia over time?
 
-> 
+> The hypoxia is al before 1990. SInce then the DO concentrations have been relatively stable and high
 
 ## Nutrients
 
@@ -60,38 +75,62 @@ This assignment will look at another measure of water quality - oxygen concentra
 
 
 ```{r}
-
+NewHopeTP_raw <- readWQPqw(siteNumbers = 'USGS-02097314',
+                       parameterCd = '00665')
+NewHopeTP <- NewHopeTP_raw %>% 
+  mutate(Date = as.Date(ActivityStartDate, format = "%Y-%m-%d"),
+         TP_mgL = as.numeric(ResultMeasureValue)) %>% 
+  select(Date, TP_mgL) 
 
 ```
 
 6.  Create two ggplots stacked with `plot_grid` that show DO and TP concentrations over time.
 
 ```{r}
+TP_plot<- ggplot(NewHopeTP, aes(x = Date, y = TP_mgL))+
+  geom_point()+
+  scale_y_log10()
 
-
+plot_grid(TP_plot,DO_plot)
 
 ```
 
 7. What do these plots tell you about nutrient concentrations over time? How might nutrient concentrations relate to your previous plot of hypoxia events?
 
-> 
+> Before 1990, there were some very high TP values, but since 1990 there are only low TP values. This correllates with the DO measurements as well.
 
 ## Discharge and Dissolved Oxygen
 
 8. Turbulent flow in rivers mixes oxygen into the water column. As discharge decreases, water moves slower, and oxygen diffuses slower into the water from the atmosphere. Download and reformat the daily discharge data for New Hope Creek (function `readNWISdv()`, site `02097314`, parameter `00060`). 
 
 ```{r}
-
+NewHope_flow_raw <- readNWISdv(siteNumbers = "02097314",
+                               parameterCd = '00060',
+                               startDate = "1983-01-01",
+                               endDate = "1984-12-31")
+newHope_flow <- NewHope_flow_raw %>% 
+  mutate(NewDate = as.Date(Date),
+         Discharge_cfs = X_00060_00003) %>% 
+  select(NewDate, Discharge_cfs)
 
 ```
 
 9.  Create two ggplots stacked with `plot_grid` that show DO concentrations and discharge over time, for the two years we observed hypoxia (1983 and 1984).
 
 ```{r}
+flow_83_plot <- ggplot(newHope_flow, aes(x = NewDate, y = Discharge_cfs))+
+  geom_line()
 
+NewHopeDO_83_84 <- NewHopeDO %>% 
+  filter(Date > "1982-12-31", Date < "1985-01-01")
 
+DO_83_plot <- ggplot(NewHopeDO_83_84, aes(x = Date, y = DO_mgL))+
+  geom_point()+
+  geom_hline(yintercept = 2)
+
+plot_grid(DO_83_plot, flow_83_plot, nrow = 2)
 ```
 
 10. Do hypoxic events happen in the wet or the dry season? Why might that be?
 
-> 
+> Hypoxic events seem to happen during the dry season. This is because there is less flow in the river incorperating oxygen. 
