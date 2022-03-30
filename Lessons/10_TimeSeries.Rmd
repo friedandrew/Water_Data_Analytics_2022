@@ -55,11 +55,11 @@ In general, detecting a monotonic trend requires a long sequence of data with fe
 
 Adjusting the data may be necessary to fulfill the assumptions of a trend test. These adjustments include **aggregation**, **subsampling**, and **interpolation**. What do each of these mean, and why might we want to use them?
 
-> aggregation: 
+> aggregation: Taking data to different time steps. Removes temporal autocorrelation taking from daily to monthly
 
-> subsampling: 
+> subsampling: Build a model with some data, then test with a different set of data. 
 
-> interpolation: 
+> interpolation: Using surrounding data t ofill in gaps
 
 Specific tests for monotonic trend analysis are listed below, with assumptions and tips: 
 
@@ -128,14 +128,18 @@ Let's visualize the seasonality of these two datasets. Add some editing to impro
 
 ```{r}
 Condplot <-
-ggplot(NeuseCond_monthly, aes(x = as.factor(Month), y = Conductivity)) +
-  geom_boxplot()
+ggplot(drop_na(NeuseCond_monthly), aes(x = as.factor(Month), y = Conductivity)) +
+  geom_boxplot(outlier.shape = NA)+
+  geom_jitter(alpha = 0.2)+
+  labs(x = " ", y = expression("Conductivity ("*mu*"S/cm)"))
 
 Flowplot <-
 ggplot(NeuseFlow_monthly, aes(x = as.factor(Month), y = Discharge_acftmo)) +
-  geom_boxplot()
+  geom_boxplot(outlier.shape = NA)+
+  geom_jitter(alpha = 0.2)+
+  labs(x = "Month")
 
-plot_grid(Condplot, Flowplot, ncol = 1)
+plot_grid(Condplot, Flowplot, ncol = 1, align = "hv")
 ```
 
 
@@ -156,7 +160,7 @@ summary(NeuseCond_trend)
 
 What would we conclude based on these findings? 
 
->
+>Positive trend over time, salinity is increasing. There is an increase in conductivity in high flow events, not low flow events
  
 If a significant trend was present, we could compute a **Sen's Slope** to quantify that trend (`sens.slope` function in the trend package).
 
@@ -165,13 +169,14 @@ Exercise: run the same test for discharge.
 ```{r}
 NeuseFlow_timeseries <- ts(NeuseFlow_monthly$Discharge_acftmo, frequency = 12,
                            start = c(1976, 1, 1), end = c(2021, 12, 1))
-
-
+NeuseFlow_trend <- smk.test(NeuseFlow_timeseries)
+summary(NeuseFlow_trend)
+NeuseFlow_trend
 ```
 
 What would we conclude based on these findings? 
 
->
+>Positive, but smaller in magnitude. Concentrated in months 8, 9, 10, which is hurricane season
  
 ## Autoregressive and Moving Average Models (ARMA)
 
