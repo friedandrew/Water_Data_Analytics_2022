@@ -1,6 +1,6 @@
 ---
 title: "Assignment 8: Time Series Analysis"
-author: "Student Name"
+author: "Andrew Friedman-Herring"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
@@ -28,7 +28,14 @@ Target due date: 2022-03-29
 
 
 ```{r setup}
-
+getwd()
+library(tidyverse)
+library(lubridate)
+library(trend)
+library(forecast)
+library(dataRetrieval)
+theme_set(theme_classic())
+options(scipen = 4)
 ```
 
 ## Data Import and Processing
@@ -38,6 +45,21 @@ Target due date: 2022-03-29
 4. Create a new data frame with the sum of monthly discharge in acre-feet per month.
 
 ```{r}
+Clear_Creek <- readNWISdv(siteNumbers = "06719505",
+                          parameterCd = "00060",
+                          startDate = "1975-01-01",
+                          endDate = "2021-12-31")
+names(Clear_Creek)[4:5] <- c("Discharge", "Approval.Code")
+
+ggplot(Clear_Creek, aes(x = Date, y = Discharge))+
+  geom_line()
+
+Clear_Creek_monthly <- Clear_Creek %>% 
+  mutate(Month = month(Date),
+         Year = year(Date)) %>% 
+  group_by(Year, Month) %>% 
+  summarize(Discharge.Monthly = mean(Discharge)*60.3307)
+
 
 ```
 
@@ -48,15 +70,16 @@ Target due date: 2022-03-29
 7. Visualize the decomposed time series.
 
 ```{r}
-
-
+Clear_Creek_ts <- ts(Clear_Creek_monthly$Discharge.Monthly, frequency = 12)
+Clear_Creek_ts_decomp <- stl(Clear_Creek_ts, s.window = "periodic")
+plot(Clear_Creek_ts_decomp)
 ```
 
 8. How do the seasonal and trend components of the decomposition compare to the Neuse River discharge dataset? 
 
-> Seasonal: 
+> Seasonal: The seasonal component is much larger in magnitude, with a very large positive spike in the late spring early summer
 
-> Trend: 
+> Trend: The trend component is smaller in magnitude than the neuse river decomposition. This was the reverse for the Neuse River
 
 ## Trend Analysis
 Research question: Has there been a monotonic trend in discharge in Clear Creek over the period of study?
@@ -64,12 +87,15 @@ Research question: Has there been a monotonic trend in discharge in Clear Creek 
 9. Run a Seasonal Mann-Kendall test on the monthly discharge data. Inspect the overall trend and the monthly trends. 
 
 ```{r}
+Clear_Creek_trend <- smk.test(Clear_Creek_ts)
+
+Clear_Creek_trend
 
 ```
 
 10. Is there an overall monotonic trend in discharge over time? Are there monthly trends over time? If so, are they positive or negative?
 
-> 
+> No trend over time, as the p-value is above .05, meaning we cannot reject the null hypothesis 
 
 
 ## Forecasting
@@ -79,10 +105,16 @@ Research question: can we predict discharge in Clear Creek moving into the futur
 12. Make a prediction into the future and plot the future predictions. 
 
 ```{r}
- 
+auto.arima(Clear_Creek_ts, trace = TRUE) 
+
+fit <- arima(Clear_Creek_ts, c(1,0,0),seasonal = list(order = c(1,1,0), period = 12))
+
+Clear_Creek_prediction <- predict(fit, n.ahead = 10*12)
+ts.plot(Clear_Creek_ts, Clear_Creek_prediction$pred, lty = c(1,3))
 
 ```
 
 13. How did the forecasting for Clear Creek compare to the Neuse River?
 
-> 
+> The forecasting was much clearer, and incorporated the seasonal component much better. 
+
